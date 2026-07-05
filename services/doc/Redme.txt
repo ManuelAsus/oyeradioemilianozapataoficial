@@ -1,0 +1,261 @@
+Reporte Técnico del Sistema – Oye 99.9 FM
+Versión 1.0 – Entorno de Producción
+Fecha: Julio 2026
+
+1. Resumen Ejecutivo
+El sistema Oye 99.9 es una plataforma web integral para una estación de radio en línea. Combina un sitio público atractivo y funcional con un panel de administración privado que permite gestionar en tiempo real la programación, noticias, locutores y un directorio de negocios afiliados. Todo el contenido se almacena en Firebase, lo que garantiza sincronización instantánea entre el frontend y la base de datos.
+
+El proyecto ha sido desarrollado con un enfoque mobile-first, utilizando glassmorphism y una paleta de colores basada en la identidad visual de la emisora (magenta y tonos oscuros). Se han corregido todas las fallas reportadas, entre ellas el formulario de contacto (que ahora guarda directamente en Firestore) y las validaciones en el panel de administración, dejando el sistema totalmente operativo.
+
+2. Arquitectura del Sistema
+2.1. Frontend (Cliente)
+El frontend se divide en dos áreas:
+
+Sitio Público (index.html, css/styles.css, js/animations.js, js/public.js, js/contact.js)
+
+Página única con secciones ancladas (Inicio, Programación, Noticias, Locutores, Directorio, Contacto).
+
+Reproductor de video en vivo (placeholder visual, listo para integrar streaming real).
+
+Timeline horizontal de programación con scroll y selección.
+
+Galería de noticias, locutores y directorio de negocios, todos dinámicos desde Firebase.
+
+Formulario de contacto funcional que envía mensajes a Firestore.
+
+Panel de Administración (admin/index.html – login, admin/dashboard.html – panel)
+
+Acceso restringido mediante autenticación de Firebase (correo/contraseña).
+
+Sidebar con navegación a secciones: Inicio (streaming), Programación, Noticias, Locutores, Directorio.
+
+CRUD completo para cada colección, con previsualización de imágenes y manejo de redes sociales.
+
+2.2. Backend (Firebase)
+Se utiliza Firebase como backend como servicio (BaaS), proporcionando:
+
+Firestore – Base de datos NoSQL en tiempo real.
+
+Colecciones: streaming, schedule, news, announcers, directory, contactMessages.
+
+Reglas de seguridad que permiten lectura pública y escritura autenticada para administradores, salvo contactMessages que permite escritura pública para el formulario de contacto.
+
+Authentication – Manejo de usuarios administrativos (solo el dueño).
+
+Storage (no utilizado directamente; las imágenes se guardan como Base64 en Firestore, divididas en chunks para cumplir con el límite de 1 MB por documento).
+
+2.3. Estructura de Carpetas
+text
+/
+├── index.html                 # Sitio público
+├── css/
+│   └── styles.css             # Estilos generales (público)
+├── js/
+│   ├── animations.js          # Animaciones y efectos (scroll reveal, menú, etc.)
+│   ├── contact.js             # Manejo del formulario de contacto (Firestore)
+│   └── public.js              # Lógica principal: sincronización con Firebase (news, schedule, announcers, directory)
+├── services/
+│       doc/
+│   │      │── Rules-Firebase.txt   # Reglas de seguridad de Firestore
+│   └── firebase.js            # Configuración e inicialización de Firebase (exporta auth, db)
+├── admin/
+│   ├── index.html             # Página de login
+│   ├── dashboard.html         # Panel de administración
+│   ├── css/
+│   │   ├── admin-login.css    # Estilos del login
+│   │   └── admin-dashboard.css # Estilos del dashboard
+│   └── js/
+│       ├── admin-auth.js      # Lógica de autenticación (login, redirección)
+│       └── admin-dashboard.js # Lógica del panel: CRUD, streaming, validaciones
+└── 
+3. Funcionalidades Detalladas
+3.1. Sitio Público
+Reproductor en Vivo
+
+Muestra un placeholder con animación de pulso y un indicador “EN VIVO” que se activa desde el panel admin.
+
+Debajo, se muestran el programa actual (título y locutor) y el horario, sincronizados con la base de datos.
+
+Programación (Timeline)
+
+Lista horizontal de todos los programas ordenados por hora.
+
+Al hacer clic en un programa, se actualiza la información del reproductor y se resalta el elemento.
+
+Los programas pueden tener una etiqueta (badge) como “En vivo” o “Próximo”.
+
+Noticias
+
+Se muestran en un grid dinámico, con la primera noticia destacada (más grande).
+
+Cada noticia incluye imagen, título, descripción, fecha y un enlace a Facebook (para leer más).
+
+Las imágenes se almacenan en Base64 en Firestore y se renderizan correctamente.
+
+Locutores
+
+Tarjetas con foto, nombre, rol y descripción.
+
+Redes sociales (Facebook, Instagram, X, TikTok, WhatsApp, YouTube) se muestran como iconos enlazados, configurados desde el panel admin.
+
+Directorio de Negocios
+
+Muestra negocios afiliados con imagen, categoría, descripción, dirección y múltiples números de teléfono/WhatsApp.
+
+Botones “Llamar” y “Pedir a domicilio” que abren el marcador telefónico o WhatsApp con el número correspondiente.
+
+Al hacer clic en la imagen, se abre un lightbox para verla a mayor tamaño.
+
+Formulario de Contacto
+
+Campos: nombre, correo, mensaje.
+
+Envío asíncrono a la colección contactMessages de Firestore.
+
+Feedback visual de éxito/error sin recargar la página.
+
+3.2. Panel de Administración
+Autenticación
+
+Login con correo y contraseña, protegido por Firebase Auth.
+
+Sesión persistente; redirección automática al dashboard si ya está logueado.
+
+Dashboard – Sección Inicio (Streaming)
+
+Control del programa actual: título, locutor, hora de inicio y fin.
+
+Interruptor para activar/desactivar el estado “EN VIVO”.
+
+Botón para restaurar el modo automático (el programa se elige según la hora actual basado en la programación).
+
+Programación
+
+Lista de programas con hora, título, locutor y badge.
+
+Botones para editar (abre modal) y eliminar.
+
+Modal para agregar/editar con validación de campos obligatorios.
+
+Noticias
+
+Lista de noticias con imagen en miniatura, título, fecha y descripción.
+
+CRUD completo: agregar, editar, eliminar.
+
+Al agregar/editar se exige título, descripción, fecha, enlace de Facebook y se permite subir imagen (se comprime y convierte a Base64).
+
+Validación de URL de Facebook.
+
+Locutores
+
+Lista con foto, nombre, rol y descripción.
+
+CRUD completo.
+
+Edición de redes sociales: checkboxes que activan campos de texto para cada red, con normalización de URLs (ej. facebook.com/usuario → usuario).
+
+La imagen de perfil se comprime y almacena en Base64.
+
+Directorio
+
+Lista de negocios con imagen, nombre, categoría, dirección y resumen de contactos.
+
+CRUD completo.
+
+Gestión dinámica de contactos: se pueden agregar múltiples números, cada uno con tipo (Teléfono o WhatsApp).
+
+La imagen se comprime y guarda en Base64.
+
+4. Diseño y Experiencia de Usuario
+4.1. Paleta de Colores (Basada en el Logo)
+Color	Hex	Uso
+Magenta principal	#BF046B	Botones primarios, acentos, enlaces, gradientes.
+Magenta claro	#D989B5	Títulos degradados, detalles, hover.
+Magenta oscuro	#BF047E	Gradientes y variantes.
+Fondo oscuro	#0D0D0D	Fondo principal (sitio y admin).
+Gris claro	#F2F2F2	Textos sobre fondos oscuros.
+Grises medios	#737373 a #a3a3a3	Textos secundarios, bordes, elementos desactivados.
+Justificación:
+El magenta es el color corporativo de la emisora, transmite energía, juventud y cercanía. El fondo oscuro reduce la fatiga visual y resalta los elementos brillantes, creando una atmósfera moderna y elegante. Los grises proporcionan jerarquía y legibilidad.
+
+4.2. Tipografía
+Inter – Para textos generales (cuerpo, botones, menús). Es una fuente sans-serif muy legible en pantalla.
+
+Poppins – Para títulos y encabezados. Aporta un toque moderno y distintivo, con mayor peso y personalidad.
+
+4.3. Efectos Visuales (Glassmorphism)
+Glassmorphism (efecto vidrio esmerilado) se aplica en tarjetas y contenedores mediante backdrop-filter: blur(), fondos semitransparentes y bordes sutiles.
+
+Este estilo refuerza la sensación de modernidad y profundidad, haciendo que el contenido “flote” sobre el fondo oscuro.
+
+4.4. Animaciones y Microinteracciones
+Scroll Reveal: Los elementos aparecen con un fade y desplazamiento al hacer scroll, mejorando la experiencia de navegación.
+
+Partículas en el Hero: Pequeños puntos que flotan lentamente, añadiendo dinamismo sin distraer.
+
+Pulso del indicador EN VIVO: Animación continua que simula latido, reforzando la sensación de transmisión en tiempo real.
+
+Efecto 3D en tarjetas: Al pasar el mouse, las tarjetas se inclinan ligeramente siguiendo el cursor, añadiendo interactividad.
+
+Menú móvil con overlay: Transiciones suaves al abrir/cerrar.
+
+4.5. Responsive Design
+El sistema está optimizado para:
+
+Escritorio (≥ 1024px): Layout completo, sidebar visible, grid de 2-3 columnas.
+
+Tablet (768px – 1024px): Sidebar colapsable, fuentes ligeramente reducidas, ajustes de grid.
+
+Móvil (≤ 768px): Menú hamburguesa, elementos apilados verticalmente, botones de tamaño táctil.
+
+5. Tecnologías Utilizadas
+Tecnología	Propósito
+HTML5	Estructura semántica del sitio y admin.
+CSS3	Estilos personalizados con variables CSS, flexbox, grid, animaciones.
+JavaScript (ES Modules)	Lógica del frontend, uso de type="module" para importar Firebase.
+Firebase (v12.15.0)	- Authentication (login admin)
+- Firestore (base de datos en tiempo real)
+Remix Icons	Biblioteca de iconos vectoriales de alta calidad.
+Google Fonts	Inter y Poppins para tipografía.
+Formspree (eliminado)	Sustituido por Firebase para el formulario de contacto.
+6. Correcciones Implementadas
+6.1. Formulario de Contacto (Error ❌ Error de conexión. Intenta nuevamente.)
+Causa: Uso de Formspree, que presentaba problemas de CORS o saturación.
+
+Solución: Se reemplazó el envío por fetch a Formspree por una escritura directa en Firestore usando addDoc(collection(db, 'contactMessages'), data).
+
+Reglas de Firestore: Se añadió allow write: if true; para la colección contactMessages (escritura pública).
+
+Resultado: El formulario ahora funciona sin errores y los mensajes quedan almacenados en la base de datos.
+
+6.2. Gestión de Noticias (No cargaba al agregar)
+Causa: Validaciones débiles y manejo de errores insuficiente al comprimir imágenes.
+
+Solución: Se mejoraron las validaciones (todos los campos obligatorios, URL de Facebook válida), se añadió manejo de errores en la compresión de imágenes y se aseguró la persistencia de la imagen al editar.
+
+Resultado: El CRUD de noticias funciona establemente.
+
+6.3. Reglas de Firestore
+Causa: Faltaban reglas para contactMessages, lo que impedía la escritura.
+
+Solución: Se creó un archivo firestore.rules con todas las reglas necesarias, incluyendo la nueva colección.
+
+Resultado: El sistema cumple con el principio de mínimo privilegio y permite la funcionalidad requerida.
+
+7. Conclusiones y Recomendaciones
+El sistema Oye 99.9 está completamente operativo, con todas las funcionalidades del sitio público y el panel de administración funcionando correctamente. La migración del formulario de contacto a Firestore ha eliminado la dependencia de servicios externos y garantiza la disponibilidad de los mensajes.
+
+Recomendaciones futuras:
+
+Implementar un sistema de notificaciones por correo electrónico cuando se reciba un nuevo mensaje de contacto (usando Firebase Cloud Functions o un servicio como SendGrid).
+
+Agregar una sección en el panel admin para visualizar y gestionar los mensajes de contacto.
+
+Integrar un reproductor de audio real (ej. Icecast/Shoutcast) en lugar del placeholder actual.
+
+Optimizar el rendimiento de las imágenes utilizando Firebase Storage en lugar de Base64 (para documentos más grandes).
+
+Implementar un sistema de caché o Service Worker para mejorar la velocidad de carga.
+
+El proyecto está listo para ser puesto en producción y cumple con los estándares modernos de desarrollo web.

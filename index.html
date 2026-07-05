@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Oye 99.9 - La radio que vibra contigo. Música, noticias y entretenimiento en vivo las 24 horas.">
+    <meta name="theme-color" content="#0D0D0D">
+    <meta property="og:title" content="Oye 99.9 - Radio en Vivo">
+    <meta property="og:description" content="La radio que vibra contigo. Escúchanos en vivo.">
+    <meta property="og:image" content="assets/img/og-image.jpg">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="assets/img/XHEM-Oye99.9-Backgraound.png" type="image/x-icon">
+    <title>Oye 99.9 | Radio en Vivo</title>
+
+    <!-- Preconnect para Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Fuentes: Inter + Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ============================================================ -->
+    <!-- HEADER / NAVBAR                                             -->
+    <!-- ============================================================ -->
+    <header class="header" id="header">
+        <div class="container header__container">
+            <!-- Logo -->
+            <a href="#" class="header__logo" aria-label="Oye 99.9 - Ir al inicio">
+                <img src="assets/img/XHEM-Oye99.9-Backgraound.png" alt="Oye 99.9" class="header__logo-image">
+            </a>
+
+            <!-- Navegación principal -->
+            <nav class="header__nav" id="headerNav" aria-label="Navegación principal">
+                <ul class="header__menu">
+                    <li><a href="#inicio" class="header__link active" data-scroll>Inicio</a></li>
+                    <li><a href="#programacion" class="header__link" data-scroll>Programación</a></li>
+                    <li><a href="#noticias" class="header__link" data-scroll>Noticias</a></li>
+                    <li><a href="#locutores" class="header__link" data-scroll>Locutores</a></li>
+                    <li><a href="#directorio" class="header__link" data-scroll>Directorio</a></li>
+                    <li><a href="#contacto" class="header__link" data-scroll>Contacto</a></li>
+                </ul>
+            </nav>
+
+            <!-- Acciones -->
+            <div class="header__actions">
+                <!-- Botón donar / apoyar -->
+                <a href="#contacto" class="btn btn--outline btn--sm header__btn-support" data-scroll>
+                    <i class="ri-heart-line"></i>
+                    <span>Apoyar</span>
+                </a>
+
+                <!-- Botón sutil para login del admin (solo dueños) -->
+                <a href="./admin/index.html" class="header__admin-link" title="Acceso administrativo" aria-label="Acceso panel administrativo">
+                    <i class="ri-shield-user-line"></i>
+                </a>
+
+                <!-- Toggle menú móvil -->
+                <button class="header__toggle" id="headerToggle" aria-label="Abrir menú" aria-expanded="false">
+                    <span class="header__toggle-bar"></span>
+                    <span class="header__toggle-bar"></span>
+                    <span class="header__toggle-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: HERO / STREAMING EN VIVO                           -->
+    <!-- ============================================================ -->
+    <section class="hero" id="inicio">
+        <div class="hero__bg">
+            <div class="hero__bg-gradient"></div>
+            <div class="hero__bg-particles" id="heroParticles"></div>
+        </div>
+
+        <div class="container hero__container">
+            <!-- Reproductor de video en vivo 16:9 -->
+            <div class="hero__player-wrapper">
+                <div class="hero__player" id="livePlayer">                    <!-- Video en vivo WebRTC -->
+                    <video id="liveVideoElement" class="hero__live-video" autoplay playsinline style="display:none"></video>
+                    <!-- Placeholder del video streaming -->
+                    <div class="hero__player-placeholder">
+                        <div class="hero__player-logo-pulse">
+                            <i class="ri-radio-fill"></i>
+                        </div>
+                        <span class="hero__player-label">Transmisión en Vivo</span>
+                    </div>
+
+                    <!-- Indicador EN VIVO -->
+                    <div class="hero__live-badge" id="liveBadge">
+                        <span class="hero__live-dot"></span>
+                        <span class="hero__live-text">EN VIVO</span>
+                    </div>
+
+                    <!-- Overlay inferior con info del programa actual -->
+                    <div class="hero__now-playing">
+                        <div class="hero__now-playing-info">
+                            <span class="hero__now-playing-label">Ahora mismo</span>
+                            <h2 class="hero__now-playing-title" id="currentShow">Morning Vibes con Ale Moreno</h2>
+                            <span class="hero__now-playing-time">06:00 - 10:00 AM</span>
+                        </div>
+                        <div class="hero__now-playing-actions">
+                            <button class="btn btn--primary btn--icon" id="shareBtn" aria-label="Compartir programa" title="Compartir">
+                                <i class="ri-share-forward-line"></i>
+                            </button>
+                            <button class="btn btn--glass btn--icon" id="likeBtn" aria-label="Me gusta" title="Me gusta">
+                                <i class="ri-heart-line"></i>
+                            </button>
+                            <button class="btn btn--glass btn--icon" id="fullscreenBtn" aria-label="Pantalla completa" title="Pantalla completa">
+                                <i class="ri-fullscreen-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini info debajo del reproductor -->
+            <div class="hero__stats">
+                <div class="hero__stat">
+                    <i class="ri-headphone-fill"></i>
+                    <span id="listenerCount">1,247</span>
+                    <small>oyentes</small>
+                </div>
+                <div class="hero__stat">
+                    <i class="ri-music-fill"></i>
+                    <span>Top 40</span>
+                    <small>género</small>
+                </div>
+                <div class="hero__stat">
+                    <i class="ri-timer-flash-fill"></i>
+                    <span id="nextShowCountdown">22 min</span>
+                    <small>próximo programa</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: PROGRAMACIÓN - TIMELINE HORIZONTAL                 -->
+    <!-- ============================================================ -->
+    <section class="schedule section" id="programacion">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__tag">Programación</span>
+                <h2 class="section__title">Tu día, tu <span class="text-gradient">música</span></h2>
+                <p class="section__subtitle">Descubre nuestra parrilla de programación diaria con los mejores contenidos.</p>
+            </div>
+
+            <!-- Timeline horizontal estilo TV -->
+            <div class="timeline" id="timeline">
+                <div class="timeline__track" id="timelineTrack">
+                    <!-- Los items serán generados por JavaScript -->
+                </div>
+
+                <!-- Controles de desplazamiento del timeline -->
+                <button class="timeline__arrow timeline__arrow--left" id="timelineLeft" aria-label="Desplazar izquierda">
+                    <i class="ri-arrow-left-s-line"></i>
+                </button>
+                <button class="timeline__arrow timeline__arrow--right" id="timelineRight" aria-label="Desplazar derecha">
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+            </div>
+
+            <!-- Próximos programas - Tarjetas (estáticas o dinámicas, puedes dejarlas) -->
+            <div class="upcoming">
+                <h3 class="upcoming__title">Próximos programas</h3>
+                <div class="upcoming__grid">
+                    <!-- Puedes mantenerlas estáticas o también hacerlas dinámicas; por ahora no las tocamos -->
+                    <article class="upcoming-card glass-card">
+                        <div class="upcoming-card__time">
+                            <i class="ri-time-line"></i> 10:00 - 14:00
+                        </div>
+                        <h4 class="upcoming-card__title">Mediodía Total</h4>
+                        <p class="upcoming-card__host">con Carlos Vega</p>
+                        <p class="upcoming-card__desc">Noticias, entrevistas y la mejor música para tu mediodía.</p>
+                        <div class="upcoming-card__tags">
+                            <span>Noticias</span>
+                            <span>Pop</span>
+                            <span>Entrevistas</span>
+                        </div>
+                    </article>
+
+                    <article class="upcoming-card glass-card">
+                        <div class="upcoming-card__time">
+                            <i class="ri-time-line"></i> 14:00 - 18:00
+                        </div>
+                        <h4 class="upcoming-card__title">Tarde de Éxitos</h4>
+                        <p class="upcoming-card__host">con Sofía Ruiz</p>
+                        <p class="upcoming-card__desc">Los hits del momento y los clásicos que marcaron época.</p>
+                        <div class="upcoming-card__tags">
+                            <span>Éxitos</span>
+                            <span>Rock</span>
+                            <span>Dedicaciones</span>
+                        </div>
+                    </article>
+
+                    <article class="upcoming-card glass-card">
+                        <div class="upcoming-card__time">
+                            <i class="ri-time-line"></i> 18:00 - 21:00
+                        </div>
+                        <h4 class="upcoming-card__title">Atardecer Retro</h4>
+                        <p class="upcoming-card__host">con Diego Paz</p>
+                        <p class="upcoming-card__desc">Un viaje musical a las mejores décadas del recuerdo.</p>
+                        <div class="upcoming-card__tags">
+                            <span>Retro</span>
+                            <span>80s</span>
+                            <span>90s</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: NOTICIAS                                           -->
+    <!-- ============================================================ -->
+    <section class="news section section--alt" id="noticias">
+      <div class="container">
+        <div class="section__header">
+          <span class="section__tag">Noticias</span>
+          <h2 class="section__title">Lo último en  <span class="text-gradient">Emiliano Zapata</span></h2>
+          <p class="section__subtitle">Mantente informado con las noticias más relevantes del momento.</p>
+        </div>
+
+        <!-- Contenedor dinámico para noticias -->
+        <div class="news__grid" id="newsGrid">
+          <!-- Las noticias se cargarán aquí desde Firebase -->
+        </div>
+
+        <div class="news__more">
+          <a href="#" class="btn btn--outline" id="newsMoreLink">Ver todas las noticias <i class="ri-arrow-right-line"></i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: LOCUTORES                                          -->
+    <!-- ============================================================ -->
+    <section class="hosts section" id="locutores">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__tag">Equipo</span>
+                <h2 class="section__title">Nuestros <span class="text-gradient">locutores</span></h2>
+                <p class="section__subtitle">El talento detrás de los micrófonos que te acompaña cada día.</p>
+            </div>
+
+            <div class="hosts__grid">
+                <!-- Locutor 1 -->
+                <div class="host-card glass-card">
+                    <div class="host-card__avatar">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop&crop=face" alt="Ale Moreno" loading="lazy">
+                        <div class="host-card__avatar-ring"></div>
+                    </div>
+                    <h3 class="host-card__name">Ale Moreno</h3>
+                    <span class="host-card__role">Morning Vibes</span>
+                    <p class="host-card__bio">Despierta contigo cada mañana con energía positiva y buena música.</p>
+                    <div class="host-card__social">
+                        <a href="#" aria-label="Instagram"><i class="ri-instagram-line"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="ri-twitter-x-line"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="ri-tiktok-line"></i></a>
+                    </div>
+                </div>
+
+                <!-- Locutor 2 -->
+                <div class="host-card glass-card">
+                    <div class="host-card__avatar">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face" alt="Carlos Vega" loading="lazy">
+                        <div class="host-card__avatar-ring"></div>
+                    </div>
+                    <h3 class="host-card__name">Carlos Vega</h3>
+                    <span class="host-card__role">Mediodía Total</span>
+                    <p class="host-card__bio">Periodista y amante de la música, te trae las noticias con estilo.</p>
+                    <div class="host-card__social">
+                        <a href="#" aria-label="Instagram"><i class="ri-instagram-line"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="ri-twitter-x-line"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="ri-tiktok-line"></i></a>
+                    </div>
+                </div>
+
+                <!-- Locutor 3 -->
+                <div class="host-card glass-card">
+                    <div class="host-card__avatar">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=face" alt="Sofía Ruiz" loading="lazy">
+                        <div class="host-card__avatar-ring"></div>
+                    </div>
+                    <h3 class="host-card__name">Sofía Ruiz</h3>
+                    <span class="host-card__role">Tarde de Éxitos</span>
+                    <p class="host-card__bio">La voz que alegra tus tardes con los mejores hits del momento.</p>
+                    <div class="host-card__social">
+                        <a href="#" aria-label="Instagram"><i class="ri-instagram-line"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="ri-twitter-x-line"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="ri-tiktok-line"></i></a>
+                    </div>
+                </div>
+
+                <!-- Locutor 4 -->
+                <div class="host-card glass-card">
+                    <div class="host-card__avatar">
+                        <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=face" alt="Diego Paz" loading="lazy">
+                        <div class="host-card__avatar-ring"></div>
+                    </div>
+                    <h3 class="host-card__name">Diego Paz</h3>
+                    <span class="host-card__role">Atardecer Retro</span>
+                    <p class="host-card__bio">Coleccionista de vinilos y experto en música de las mejores décadas.</p>
+                    <div class="host-card__social">
+                        <a href="#" aria-label="Instagram"><i class="ri-instagram-line"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="ri-twitter-x-line"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="ri-tiktok-line"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: PATROCINADORES (MARQUEE)                           -->
+    <!-- ============================================================ -->
+    <section class="sponsors section section--alt">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__tag">Aliados</span>
+                <h2 class="section__title">Nuestros <span class="text-gradient">patrocinadores</span></h2>
+                <p class="section__subtitle">Marcas que confían en nosotros para conectar con su audiencia.</p>
+            </div>
+
+            <div class="sponsors__marquee" id="sponsorsMarquee">
+                <div class="sponsors__track" id="sponsorsTrack">
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-store-3-fill"></i>
+                        </div>
+                        <span>SoundWave</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-cup-fill"></i>
+                        </div>
+                        <span>Café Porsa</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-smartphone-fill"></i>
+                        </div>
+                        <span>TechNocell</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-building-2-fill"></i>
+                        </div>
+                        <span>Grupo Marrano</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-car-fill"></i>
+                        </div>
+                        <span>AutoZone</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-shirt-fill"></i>
+                        </div>
+                        <span>Urban</span>
+                    </div>
+                    <!-- Duplicados para marquee infinito -->
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-store-3-fill"></i>
+                        </div>
+                        <span>Sony</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-cup-fill"></i>
+                        </div>
+                        <span>Café Porsa</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-smartphone-fill"></i>
+                        </div>
+                        <span>TechNocell</span>
+                    </div>
+                    <div class="sponsors__item glass-card">
+                        <div class="sponsors__logo">
+                            <i class="ri-building-2-fill"></i>
+                        </div>
+                        <span>Grupo Marrano</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: DIRECTORIO DE NEGOCIOS (PATROCINADORES ADICIONALES)-->
+    <!-- ============================================================ -->
+    <section class="directory section" id="directorio">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__tag">Directorio</span>
+                <h2 class="section__title">Negocios <span class="text-gradient">afiliados</span></h2>
+                <p class="section__subtitle">Apoya a los comercios locales que confían en Oye 99.9. Encuentra sus datos de contacto y pide a domicilio.</p>
+            </div>
+
+            <div class="directory__grid">
+                <!-- Los negocios se cargarán dinámicamente desde Firebase -->
+            </div>
+
+            <div class="directory__cta">
+                <p class="directory__cta-text">¿Quieres aparecer aquí? Anúnciate con nosotros.</p>
+                <a href="#contacto" class="btn btn--outline" data-scroll>Contáctanos <i class="ri-arrow-right-line"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECCIÓN: REDES SOCIALES Y CONTACTO                          -->
+    <!-- ============================================================ -->
+    <section class="connect section" id="contacto">
+        <div class="container">
+            <div class="connect__grid">
+                <!-- Redes Sociales -->
+                <div class="connect__social">
+                    <h2 class="connect__title">Conéctate con <span class="text-gradient">nosotros</span></h2>
+                    <p class="connect__desc">Síguenos en redes sociales para estar al tanto de todo lo que pasa en Oye 99.9. Concursos, noticias y mucho más.</p>
+                    <div class="connect__icons">
+                        <a href="#" class="connect__icon" aria-label="Instagram" title="Instagram">
+                            <i class="ri-instagram-fill"></i>
+                        </a>
+                        <a href="#" class="connect__icon" aria-label="Facebook" title="Facebook">
+                            <i class="ri-facebook-fill"></i>
+                        </a>
+                        <a href="#" class="connect__icon" aria-label="Twitter / X" title="X (Twitter)">
+                            <i class="ri-twitter-x-fill"></i>
+                        </a>
+                        <a href="#" class="connect__icon" aria-label="TikTok" title="TikTok">
+                            <i class="ri-tiktok-fill"></i>
+                        </a>
+                        <a href="#" class="connect__icon" aria-label="YouTube" title="YouTube">
+                            <i class="ri-youtube-fill"></i>
+                        </a>
+                        <a href="#" class="connect__icon" aria-label="WhatsApp" title="WhatsApp">
+                            <i class="ri-whatsapp-fill"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Formulario de contacto funcional con Formspree -->
+                <div class="connect__form glass-card">
+                    <h3 class="connect__form-title">Escríbenos</h3>
+                    <form id="contactForm" class="contact-form" action="https://formspree.io/f/mpqgyyly" method="POST">
+                        <div class="contact-form__group">
+                            <input type="text" id="contactName" name="name" placeholder="Tu nombre" required class="contact-form__input">
+                            <label for="contactName" class="contact-form__label">Nombre</label>
+                        </div>
+                        <div class="contact-form__group">
+                            <input type="email" id="contactEmail" name="email" placeholder="Tu correo electrónico" required class="contact-form__input">
+                            <label for="contactEmail" class="contact-form__label">Correo</label>
+                        </div>
+                        <div class="contact-form__group">
+                            <textarea id="contactMessage" name="message" rows="4" placeholder="Tu mensaje..." required class="contact-form__input contact-form__textarea"></textarea>
+                            <label for="contactMessage" class="contact-form__label">Mensaje</label>
+                        </div>
+                        <button type="submit" class="btn btn--primary btn--block">
+                            Enviar mensaje <i class="ri-send-plane-fill"></i>
+                        </button>
+                        <!-- Mensaje de estado (oculto por defecto) -->
+                        <div id="formStatus" class="form-status" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: var(--radius-md); text-align: center;"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                      -->
+    <!-- ============================================================ -->
+    <footer class="footer">
+        <div class="container footer__container">
+            <div class="footer__brand">
+                <a href="#" class="footer__logo">
+                    <i class="ri-radio-fill"></i>
+                    Oye <span>99.9</span>
+                </a>
+                <p class="footer__tagline">La radio que vibra contigo, 24/7.</p>
+            </div>
+
+            <div class="footer__links">
+                <div class="footer__col">
+                    <h4>Explora</h4>
+                    <ul>
+                        <li><a href="#inicio" data-scroll>Inicio</a></li>
+                        <li><a href="#programacion" data-scroll>Programación</a></li>
+                        <li><a href="#noticias" data-scroll>Noticias</a></li>
+                        <li><a href="#locutores" data-scroll>Locutores</a></li>
+                        <li><a href="#directorio" data-scroll>Directorio</a></li>
+                    </ul>
+                </div>
+                <div class="footer__col">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Aviso de Privacidad</a></li>
+                        <li><a href="#">Términos de Uso</a></li>
+                        <li><a href="#">Política de Cookies</a></li>
+                    </ul>
+                </div>
+                <div class="footer__col">
+                    <h4>Contacto</h4>
+                    <ul>
+                        <li><i class="ri-mail-line"></i> hola@oye999.fm</li>
+                        <li><i class="ri-phone-line"></i> +52 55 1234 5678</li>
+                        <li><i class="ri-map-pin-line"></i> Emiliano Zapata Tab, México</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Acceso admin súper sutil -->
+            <div class="footer__admin">
+                <a href="../admin/index.html" class="footer__admin-link" title="Panel administrativo">
+                    <i class="ri-shield-user-line"></i>
+                    <span>Admin</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="footer__bottom">
+            <div class="container">
+                <p>&copy; 2026 Oye 99.9. Todos los derechos reservados. Diseñado con <i class="ri-heart-fill"></i> para la radio.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================================ -->
+    <!-- BOTÓN VOLVER ARRIBA                                         -->
+    <!-- ============================================================ -->
+    <button class="scroll-top" id="scrollTop" aria-label="Volver arriba" title="Volver arriba">
+        <i class="ri-arrow-up-line"></i>
+    </button>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPTS                                                     -->
+    <!-- ============================================================ -->
+    <!-- Animaciones (sin lógica de backend) -->
+    <script src="js/animations.js"></script>
+    <!-- Manejo del formulario de contacto (nuevo) -->
+    <script src="js/contact.js"></script>
+    <!-- Lógica de Firebase para el frontend público -->
+    <script type="module" src="js/public.js"></script>
+</body>
+</html>

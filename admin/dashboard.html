@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Admin · Oye 99.9</title>
+  <link rel="icon" href="../assets/img/XHEM-Oye99.9-Backgraound.png" type="image/x-icon" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Remix Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
+  <!-- Estilos del panel -->
+  <link rel="stylesheet" href="css/admin-dashboard.css" />
+</head>
+<body>
+  <div class="admin-wrapper">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-brand">
+        <i class="ri-radio-fill"></i>
+        <span>Oye 99.9</span>
+        <span class="brand-sub">Admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-link active" data-section="inicio">
+          <i class="ri-home-5-line"></i> Inicio
+        </a>
+        <a href="#" class="nav-link" data-section="programacion">
+          <i class="ri-calendar-event-line"></i> Programación
+        </a>
+        <a href="#" class="nav-link" data-section="noticias">
+          <i class="ri-news-line"></i> Noticias
+        </a>
+        <a href="#" class="nav-link" data-section="locutores">
+          <i class="ri-user-voice-line"></i> Locutores
+        </a>
+        <!-- NUEVA SECCIÓN: DIRECTORIO -->
+        <a href="#" class="nav-link" data-section="directorio">
+          <i class="ri-store-3-line"></i> Directorio
+        </a>
+        <!-- <a href="#" class="nav-link" data-section="contacto" style="opacity:0.5; pointer-events:none;">
+          <i class="ri-mail-line"></i> Contacto
+        </a> -->
+      </nav>
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn-logout"><i class="ri-logout-box-line"></i> Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="admin-main">
+      <!-- Header del admin -->
+      <header class="admin-header" id="adminHeader">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+            <i class="ri-menu-line"></i>
+          </button>
+          <h2 id="sectionTitle">Inicio</h2>
+        </div>
+        <div class="header-right">
+          <span id="adminUserEmail" class="user-email">admin@oye999.fm</span>
+        </div>
+      </header>
+
+      <!-- Sección: Inicio (Transmisión en Vivo) -->
+      <section id="inicio" class="admin-section active">
+        <div class="section-header">
+          <h3>Transmisión en Vivo</h3>
+          <p>Controla el programa que se muestra actualmente en el reproductor.</p>
+        </div>
+
+        <div class="card streaming-card">
+          <div class="streaming-status">
+            <span class="status-label">Estado de la transmisión</span>
+            <div class="toggle-wrapper">
+              <label class="toggle">
+                <input type="checkbox" id="liveToggle" />
+                <span class="toggle-slider"></span>
+              </label>
+              <span id="liveStatusText" class="status-text">Inactivo</span>
+            </div>
+          </div>
+
+          <form id="streamingForm" class="streaming-form">
+            <div class="form-group">
+              <label for="programTitle">Título del programa</label>
+              <input type="text" id="programTitle" placeholder="Ej. Morning Vibes" required />
+            </div>
+            <div class="form-group">
+              <label for="programHost">Locutor / Conductor</label>
+              <input type="text" id="programHost" placeholder="Ej. Ale Moreno" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="startTime">Hora de inicio</label>
+                <input type="time" id="startTime" required />
+              </div>
+              <div class="form-group">
+                <label for="endTime">Hora de fin</label>
+                <input type="time" id="endTime" required />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Guardar cambios</button>
+              <button type="button" class="btn btn-outline" id="autoRestoreBtn">Restaurar automático</button>
+            </div>
+          </form>
+          <div id="streamingMessage" class="form-message"></div>
+        </div>
+
+        <!-- ===== CARD: Emisión de Video en Vivo (WebRTC) ===== -->
+        <div class="card broadcast-card" id="broadcastCard">
+          <div class="broadcast-info-header">
+            <h4><i class="ri-broadcast-line"></i> Emisión de Video en Vivo</h4>
+            <p>Transmite video y audio directamente desde este navegador. Los visitantes lo verán en tiempo real en la página principal.</p>
+          </div>
+
+          <!-- Tipo de captura -->
+          <div class="broadcast-type-section">
+            <span class="broadcast-label">Tipo de emisión</span>
+            <div class="capture-type-btns">
+              <button type="button" class="btn btn-outline capture-btn active" id="captureTypeCamera">
+                <i class="ri-camera-line"></i> Cámara + Micrófono
+              </button>
+              <button type="button" class="btn btn-outline capture-btn" id="captureTypeScreen">
+                <i class="ri-computer-line"></i> Grabar Pantalla
+              </button>
+            </div>
+          </div>
+
+          <!-- Selectores de dispositivos -->
+          <div id="deviceSelectorsGroup">
+            <div class="broadcast-device-row">
+              <div class="form-group">
+                <label for="cameraSelect">Cámara</label>
+                <select id="cameraSelect" class="broadcast-select">
+                  <option value="">Detecta dispositivos primero</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="micSelect">Micrófono</label>
+                <select id="micSelect" class="broadcast-select">
+                  <option value="">Detecta dispositivos primero</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="detectDevicesBtn">
+              <i class="ri-refresh-line"></i> Detectar dispositivos
+            </button>
+          </div>
+
+          <!-- Preview local -->
+          <div class="broadcast-preview-wrapper" id="broadcastPreviewWrapper" style="display:none">
+            <video id="localPreviewVideo" autoplay muted playsinline class="broadcast-local-video"></video>
+            <div class="broadcast-preview-label"><i class="ri-eye-off-line"></i> Vista previa local (solo tú la ves)</div>
+          </div>
+
+          <!-- Controles -->
+          <div class="broadcast-controls">
+            <button type="button" class="btn btn-primary" id="startBroadcastBtn">
+              <i class="ri-broadcast-line"></i> Iniciar Emisión
+            </button>
+            <button type="button" class="btn btn-danger" id="stopBroadcastBtn" style="display:none">
+              <i class="ri-stop-circle-line"></i> Detener Emisión
+            </button>
+            <div class="broadcast-live-info" id="broadcastLiveInfo" style="display:none">
+              <span class="broadcast-live-badge">
+                <span class="bcast-dot"></span> EN VIVO
+              </span>
+              <span class="broadcast-viewers-count">
+                <i class="ri-user-fill"></i> <span id="bcastViewerNum">0</span> espectadores
+              </span>
+            </div>
+          </div>
+
+          <div id="broadcastMessage" class="form-message" style="display:none"></div>
+        </div>
+      </section>
+
+      <!-- Sección: Programación -->
+      <section id="programacion" class="admin-section">
+        <div class="section-header">
+          <h3>Gestión de Programación</h3>
+          <p>Agrega, edita o elimina los programas que aparecen en el timeline.</p>
+          <button class="btn btn-primary" id="addScheduleBtn"><i class="ri-add-line"></i> Agregar programa</button>
+        </div>
+
+        <div class="card schedule-card">
+          <div id="scheduleList" class="schedule-list">
+            <p class="loading-text">Cargando programación...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Noticias -->
+      <section id="noticias" class="admin-section">
+        <div class="section-header">
+          <div>
+            <h3>Gestión de Noticias</h3>
+            <p>Crea, edita o elimina noticias que aparecerán en la portada.</p>
+          </div>
+          <button class="btn btn-primary" id="addNewsBtn"><i class="ri-add-line"></i> Agregar noticia</button>
+        </div>
+
+        <div class="card news-admin-card">
+          <div id="newsList" class="news-admin-list">
+            <p class="loading-text">Cargando noticias...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Locutores -->
+      <section id="locutores" class="admin-section">
+        <div class="section-header">
+          <div>
+            <h3>Gestión de Locutores</h3>
+            <p>Administra el talento de la estación: fotos, redes sociales y más.</p>
+          </div>
+          <button class="btn btn-primary" id="addLocutorBtn"><i class="ri-add-line"></i> Agregar locutor</button>
+        </div>
+
+        <div class="card locutor-admin-card">
+          <div id="locutorList" class="locutor-admin-list">
+            <p class="loading-text">Cargando locutores...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================== -->
+      <!-- NUEVA SECCIÓN: DIRECTORIO                                   -->
+      <!-- ========================================================== -->
+      <section id="directorio" class="admin-section">
+        <div class="section-header">
+          <div>
+            <h3>Gestión de Directorio</h3>
+            <p>Administra los negocios afiliados que aparecerán en el directorio público.</p>
+          </div>
+          <button class="btn btn-primary" id="addDirectoryBtn"><i class="ri-add-line"></i> Agregar negocio</button>
+        </div>
+
+        <div class="card directory-admin-card">
+          <div id="directoryList" class="directory-admin-list">
+            <p class="loading-text">Cargando directorio...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== MODAL para Programación ===== -->
+  <div class="modal-overlay" id="scheduleModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Agregar programa</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <form id="scheduleForm">
+        <input type="hidden" id="scheduleEditId" value="" />
+        <div class="form-group">
+          <label for="scheduleTime">Hora (HH:MM)</label>
+          <input type="time" id="scheduleTime" required />
+        </div>
+        <div class="form-group">
+          <label for="scheduleTitle">Título</label>
+          <input type="text" id="scheduleTitle" placeholder="Ej. Morning Vibes" required />
+        </div>
+        <div class="form-group">
+          <label for="scheduleHost">Locutor</label>
+          <input type="text" id="scheduleHost" placeholder="Ej. Ale Moreno" required />
+        </div>
+        <div class="form-group">
+          <label for="scheduleBadge">Etiqueta (opcional)</label>
+          <input type="text" id="scheduleBadge" placeholder="Ej. En vivo, Próximo" />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="scheduleSubmitBtn">Guardar</button>
+          <button type="button" class="btn btn-outline" id="scheduleCancelBtn">Cancelar</button>
+        </div>
+        <div id="scheduleFormMessage" class="form-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL para Noticias ===== -->
+  <div class="modal-overlay" id="newsModal">
+    <div class="modal modal--news">
+      <div class="modal-header">
+        <h3 id="newsModalTitle">Agregar noticia</h3>
+        <button class="modal-close" id="newsModalClose">&times;</button>
+      </div>
+      <form id="newsForm">
+        <input type="hidden" id="newsEditId" value="" />
+        <div class="form-group">
+          <label for="newsTitle">Título de la noticia</label>
+          <input type="text" id="newsTitle" placeholder="Ej. Nuevo festival de música" required />
+        </div>
+        <div class="form-group">
+          <label for="newsDescription">Descripción corta</label>
+          <textarea id="newsDescription" rows="3" placeholder="Breve resumen..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="newsDate">Fecha</label>
+          <input type="date" id="newsDate" required />
+        </div>
+        <div class="form-group">
+          <label for="newsFacebookLink">Enlace de Facebook</label>
+          <input type="url" id="newsFacebookLink" placeholder="https://www.facebook.com/..." required />
+        </div>
+        <div class="form-group">
+          <label for="newsImage">Imagen</label>
+          <input type="file" id="newsImage" accept="image/png, image/jpeg, image/jpg" />
+          <div id="newsImagePreview" class="news-image-preview"></div>
+          <small class="form-hint">La imagen se comprimirá automáticamente (máx. 1920px). Formatos: PNG, JPG.</small>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="newsSubmitBtn">Guardar</button>
+          <button type="button" class="btn btn-outline" id="newsCancelBtn">Cancelar</button>
+        </div>
+        <div id="newsFormMessage" class="form-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL para Locutores ===== -->
+  <div class="modal-overlay" id="locutorModal">
+    <div class="modal modal--locutor">
+      <div class="modal-header">
+        <h3 id="locutorModalTitle">Agregar locutor</h3>
+        <button class="modal-close" id="locutorModalClose">&times;</button>
+      </div>
+      <form id="locutorForm">
+        <input type="hidden" id="locutorEditId" value="" />
+        <div class="form-group">
+          <label for="locutorName">Nombre completo</label>
+          <input type="text" id="locutorName" placeholder="Ej. Ale Moreno" required />
+        </div>
+        <div class="form-group">
+          <label for="locutorRole">Rol / Estación</label>
+          <input type="text" id="locutorRole" placeholder="Ej. Morning Vibes" required />
+        </div>
+        <div class="form-group">
+          <label for="locutorDescription">Descripción breve</label>
+          <textarea id="locutorDescription" rows="3" placeholder="Cuéntanos sobre el locutor..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="locutorImage">Foto de perfil</label>
+          <input type="file" id="locutorImage" accept="image/png, image/jpeg, image/jpg" />
+          <div id="locutorImagePreview" class="locutor-image-preview"></div>
+          <small class="form-hint">La imagen se comprimirá automáticamente (máx. 1920px). Formatos: PNG, JPG.</small>
+        </div>
+        <!-- Redes Sociales Dinámicas -->
+        <div class="form-group">
+          <label>Redes sociales</label>
+          <div id="socialCheckboxes" class="social-checkboxes">
+            <!-- Generado por JavaScript -->
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="locutorSubmitBtn">Guardar</button>
+          <button type="button" class="btn btn-outline" id="locutorCancelBtn">Cancelar</button>
+        </div>
+        <div id="locutorFormMessage" class="form-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- NUEVO MODAL para Directorio                                 -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="directoryModal">
+    <div class="modal modal--directory">
+      <div class="modal-header">
+        <h3 id="directoryModalTitle">Agregar negocio</h3>
+        <button class="modal-close" id="directoryModalClose">&times;</button>
+      </div>
+      <form id="directoryForm">
+        <input type="hidden" id="directoryEditId" value="" />
+
+        <div class="form-group">
+          <label for="directoryBadge">Categoría (Badge)</label>
+          <input type="text" id="directoryBadge" placeholder="Ej. Restaurante, Ferretería, Farmacia" required />
+        </div>
+
+        <div class="form-group">
+          <label for="directoryName">Nombre del negocio</label>
+          <input type="text" id="directoryName" placeholder="Ej. El Buen Sazón" required />
+        </div>
+
+        <div class="form-group">
+          <label for="directoryDescription">Descripción breve</label>
+          <textarea id="directoryDescription" rows="3" placeholder="Breve descripción del negocio..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="directoryAddress">Dirección</label>
+          <input type="text" id="directoryAddress" placeholder="Calle, número, colonia..." required />
+        </div>
+
+        <!-- Contactos (dinámicos) -->
+        <div class="form-group">
+          <label>Contactos (Teléfono / WhatsApp)</label>
+          <div id="contactsContainer">
+            <!-- Los contactos se agregan aquí dinámicamente -->
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="addContactBtn">
+            <i class="ri-add-line"></i> Agregar contacto
+          </button>
+          <small class="form-hint">Puedes agregar varios números. Selecciona el tipo (Teléfono o WhatsApp).</small>
+        </div>
+
+        <div class="form-group">
+          <label for="directoryImage">Imagen del negocio</label>
+          <input type="file" id="directoryImage" accept="image/png, image/jpeg, image/jpg" />
+          <div id="directoryImagePreview" class="directory-image-preview"></div>
+          <small class="form-hint">La imagen se comprimirá automáticamente (máx. 1920px). Formatos: PNG, JPG.</small>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="directorySubmitBtn">Guardar</button>
+          <button type="button" class="btn btn-outline" id="directoryCancelBtn">Cancelar</button>
+        </div>
+        <div id="directoryFormMessage" class="form-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/admin-dashboard.js"></script>
+</body>
+</html>
