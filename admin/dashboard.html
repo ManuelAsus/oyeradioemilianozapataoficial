@@ -113,8 +113,8 @@
         <!-- ===== CARD: Emisión de Video en Vivo (WebRTC) ===== -->
         <div class="card broadcast-card" id="broadcastCard">
           <div class="broadcast-info-header">
-            <h4><i class="ri-broadcast-line"></i> Emisión de Video en Vivo</h4>
-            <p>Transmite video y audio directamente desde este navegador. Los visitantes lo verán en tiempo real en la página principal.</p>
+            <h4><i class="ri-broadcast-line"></i> Emisión en Vivo</h4>
+            <p>Transmite video, pantalla o solo audio directamente desde este navegador. Los visitantes lo verán en tiempo real en la página principal.</p>
           </div>
 
           <!-- Tipo de captura -->
@@ -127,13 +127,19 @@
               <button type="button" class="btn btn-outline capture-btn" id="captureTypeScreen">
                 <i class="ri-computer-line"></i> Grabar Pantalla
               </button>
+              <button type="button" class="btn btn-outline capture-btn" id="captureTypeAudio">
+                <i class="ri-mic-line"></i> Solo Micrófono
+              </button>
+              <button type="button" class="btn btn-outline capture-btn" id="captureTypeSystemAudio">
+                <i class="ri-speaker-line"></i> Solo Sonidos del Sistema
+              </button>
             </div>
           </div>
 
           <!-- Selectores de dispositivos -->
           <div id="deviceSelectorsGroup">
             <div class="broadcast-device-row">
-              <div class="form-group">
+              <div class="form-group" id="cameraSelectorWrapper">
                 <label for="cameraSelect">Cámara</label>
                 <select id="cameraSelect" class="broadcast-select">
                   <option value="">Detecta dispositivos primero</option>
@@ -153,7 +159,12 @@
 
           <!-- Preview local -->
           <div class="broadcast-preview-wrapper" id="broadcastPreviewWrapper" style="display:none">
-            <video id="localPreviewVideo" autoplay muted playsinline class="broadcast-local-video"></video>
+            <video id="localPreviewVideo" autoplay muted playsinline class="broadcast-local-video" style="display:none"></video>
+            <div class="broadcast-preview-placeholder" id="broadcastPreviewPlaceholder" style="display:none">
+              <i class="ri-volume-up-line"></i>
+              <h5>Audio listo para transmitir</h5>
+              <p>Se capturará tu micrófono y, si el navegador lo permite, el audio de la pestaña o ventana seleccionada.</p>
+            </div>
             <div class="broadcast-preview-label"><i class="ri-eye-off-line"></i> Vista previa local (solo tú la ves)</div>
           </div>
 
@@ -164,6 +175,10 @@
             </button>
             <button type="button" class="btn btn-danger" id="stopBroadcastBtn" style="display:none">
               <i class="ri-stop-circle-line"></i> Detener Emisión
+            </button>
+            <button type="button" class="broadcast-toggle" id="micToggleWrap" style="display:none" role="switch" aria-checked="true" aria-label="Micrófono">
+              <span class="broadcast-toggle-slider"></span>
+              <span class="broadcast-toggle-label">Micrófono</span>
             </button>
             <div class="broadcast-live-info" id="broadcastLiveInfo" style="display:none">
               <span class="broadcast-live-badge">

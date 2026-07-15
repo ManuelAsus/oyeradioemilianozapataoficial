@@ -53,14 +53,20 @@ const sidebar = document.getElementById('adminSidebar');
 // Emisión WebRTC
 const captureTypeCameraBtn = document.getElementById('captureTypeCamera');
 const captureTypeScreenBtn = document.getElementById('captureTypeScreen');
+const captureTypeAudioBtn = document.getElementById('captureTypeAudio');
+const captureTypeSystemAudioBtn = document.getElementById('captureTypeSystemAudio');
 const deviceSelectorsGroup = document.getElementById('deviceSelectorsGroup');
 const cameraSelect = document.getElementById('cameraSelect');
+const cameraSelectorWrapper = document.getElementById('cameraSelectorWrapper');
 const micSelect = document.getElementById('micSelect');
 const detectDevicesBtn = document.getElementById('detectDevicesBtn');
 const localPreviewVideo = document.getElementById('localPreviewVideo');
+const broadcastPreviewPlaceholder = document.getElementById('broadcastPreviewPlaceholder');
 const broadcastPreviewWrapper = document.getElementById('broadcastPreviewWrapper');
 const startBroadcastBtn = document.getElementById('startBroadcastBtn');
 const stopBroadcastBtn = document.getElementById('stopBroadcastBtn');
+const micLiveToggle = document.getElementById('micToggleWrap');
+const micToggleWrap = micLiveToggle;
 const broadcastLiveInfo = document.getElementById('broadcastLiveInfo');
 const bcastViewerNum = document.getElementById('bcastViewerNum');
 const broadcastMessage = document.getElementById('broadcastMessage');
@@ -377,26 +383,77 @@ let broadcastPeerConnections = new Map();
 let broadcastViewersUnsub = null;
 let broadcastSessionId = null;
 let isBroadcasting = false;
+let liveMicStream = null;
+let liveMicTrack = null;
+let liveMicEnabled = true;
+let broadcastAudioTracks = [];
+
+function actualizarUICaptura() {
+  const isCamera = broadcastCaptureType === 'camera';
+  const isScreen = broadcastCaptureType === 'screen';
+  const isAudio = broadcastCaptureType === 'audio';
+  const isSystemAudio = broadcastCaptureType === 'system-audio';
+
+  captureTypeCameraBtn.classList.toggle('active', isCamera);
+  captureTypeScreenBtn.classList.toggle('active', isScreen);
+  captureTypeAudioBtn.classList.toggle('active', isAudio);
+  captureTypeSystemAudioBtn.classList.toggle('active', isSystemAudio);
+
+  if (isScreen || isSystemAudio) {
+    deviceSelectorsGroup.style.display = 'none';
+  } else {
+    deviceSelectorsGroup.style.display = '';
+    if (cameraSelectorWrapper) {
+      cameraSelectorWrapper.style.display = isAudio ? 'none' : '';
+    }
+  }
+}
 
 captureTypeCameraBtn.addEventListener('click', () => {
   broadcastCaptureType = 'camera';
-  captureTypeCameraBtn.classList.add('active');
-  captureTypeScreenBtn.classList.remove('active');
-  deviceSelectorsGroup.style.display = '';
+  actualizarUICaptura();
 });
 
 captureTypeScreenBtn.addEventListener('click', () => {
   broadcastCaptureType = 'screen';
-  captureTypeScreenBtn.classList.add('active');
-  captureTypeCameraBtn.classList.remove('active');
-  deviceSelectorsGroup.style.display = 'none';
+  actualizarUICaptura();
 });
+
+captureTypeAudioBtn.addEventListener('click', () => {
+  broadcastCaptureType = 'audio';
+  actualizarUICaptura();
+});
+
+captureTypeSystemAudioBtn.addEventListener('click', () => {
+  broadcastCaptureType = 'system-audio';
+  actualizarUICaptura();
+});
+
+function actualizarEstadoMicToggle() {
+  if (!micLiveToggle) return;
+  const isActive = Boolean(liveMicTrack && liveMicEnabled);
+  micLiveToggle.classList.toggle('active', isActive);
+  micLiveToggle.setAttribute('aria-checked', String(isActive));
+  micLiveToggle.disabled = !Boolean(liveMicTrack);
+}
+
+micLiveToggle?.addEventListener('click', () => {
+  if (!liveMicTrack) return;
+  liveMicEnabled = !liveMicEnabled;
+  liveMicTrack.enabled = liveMicEnabled;
+  actualizarEstadoMicToggle();
+});
+
+actualizarUICaptura();
 
 detectDevicesBtn.addEventListener('click', async () => {
   detectDevicesBtn.disabled = true;
   detectDevicesBtn.innerHTML = '<i class="ri-loader-line"></i> Detectando...';
   try {
-    const tmp = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    const constraints = broadcastCaptureType === 'camera'
+      ? { audio: true, video: true }
+      : { audio: true, video: false };
+    const tmp = await navigator.mediaDevices.getUserMedia(constraints);
     tmp.getTracks().forEach(t => t.stop());
     const devices = await navigator.mediaDevices.enumerateDevices();
     cameraSelect.innerHTML = '';
@@ -437,20 +494,113 @@ startBroadcastBtn.addEventListener('click', async () => {
       const videoC = cameraSelect.value ? { deviceId: { exact: cameraSelect.value } } : true;
       const audioC = micSelect.value ? { deviceId: { exact: micSelect.value } } : true;
       broadcastLocalStream = await navigator.mediaDevices.getUserMedia({ video: videoC, audio: audioC });
+      liveMicStream = broadcastLocalStream;
+      liveMicTrack = broadcastLocalStream.getAudioTracks()[0] || null;
+      broadcastAudioTracks = [...broadcastLocalStream.getAudioTracks()];
+      liveMicEnabled = true;
+      if (micLiveToggle) {
+        actualizarEstadoMicToggle();
+      }
+    } else if (broadcastCaptureType === 'audio') {
+      const audioC = micSelect.value ? { deviceId: { exact: micSelect.value } } : true;
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: audioC, video: false });
+
+      let systemAudioStream = null;
+      try {
+        systemAudioStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: false });
+      } catch (audioErr) {
+        console.warn('No se pudo capturar audio del sistema, se emitirá solo micrófono:', audioErr);
+      }
+
+      const audioTracks = [...micStream.getAudioTracks()];
+      if (systemAudioStream?.getAudioTracks().length) {
+        audioTracks.push(...systemAudioStream.getAudioTracks());
+      }
+
+      if (!audioTracks.length) {
+        throw new Error('No se pudo obtener audio para la emisión.');
+      }
+
+      broadcastLocalStream = new MediaStream(audioTracks);
+      liveMicStream = micStream;
+      liveMicTrack = micStream.getAudioTracks()[0] || null;
+      broadcastAudioTracks = [...broadcastLocalStream.getAudioTracks()];
+      liveMicEnabled = true;
+      if (micLiveToggle) {
+        actualizarEstadoMicToggle();
+      }
+      if (systemAudioStream) {
+        systemAudioStream.getTracks().forEach(track => track.addEventListener('ended', () => {
+          if (isBroadcasting) detenerEmisionBroadcast();
+        }));
+      }
+    } else if (broadcastCaptureType === 'system-audio') {
+      const systemAudioStream = await obtenerStreamAudioSistema();
+      const audioTracks = [...systemAudioStream.getAudioTracks()];
+      if (!audioTracks.length) {
+        throw new Error('No se pudo obtener audio del sistema desde la pestaña o ventana seleccionada.');
+      }
+      broadcastLocalStream = new MediaStream(audioTracks);
+      liveMicStream = null;
+      liveMicTrack = null;
+      broadcastAudioTracks = [...broadcastLocalStream.getAudioTracks()];
+      liveMicEnabled = false;
+      if (micLiveToggle) {
+        liveMicEnabled = false;
+        actualizarEstadoMicToggle();
+      }
+      systemAudioStream.getTracks().forEach(track => track.addEventListener('ended', () => {
+        if (isBroadcasting) detenerEmisionBroadcast();
+      }));
     } else {
-      broadcastLocalStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: true });
-      broadcastLocalStream.getVideoTracks()[0].addEventListener('ended', () => {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: true });
+      const micAudioTracks = [];
+      let micStream = null;
+      let micTrack = null;
+
+      const micConstraint = micSelect.value
+        ? { deviceId: { exact: micSelect.value } }
+        : true;
+
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: micConstraint, video: false });
+      micTrack = micStream.getAudioTracks()[0] || null;
+      if (micTrack) {
+        micAudioTracks.push(micTrack);
+      }
+
+      const combinedTracks = [
+        ...displayStream.getVideoTracks(),
+        ...displayStream.getAudioTracks(),
+        ...micAudioTracks
+      ];
+
+      broadcastLocalStream = new MediaStream(combinedTracks);
+      liveMicStream = micStream;
+      liveMicTrack = micTrack;
+      broadcastAudioTracks = [...broadcastLocalStream.getAudioTracks()];
+      liveMicEnabled = Boolean(micTrack);
+      if (micLiveToggle) {
+        actualizarEstadoMicToggle();
+      }
+      if (liveMicTrack) {
+        liveMicTrack.enabled = liveMicEnabled;
+      }
+      displayStream.getVideoTracks()[0].addEventListener('ended', () => {
         if (isBroadcasting) detenerEmisionBroadcast();
       });
     }
-    localPreviewVideo.srcObject = broadcastLocalStream;
+    actualizarPreviewLocal(broadcastLocalStream);
     broadcastPreviewWrapper.style.display = '';
   } catch (mediaErr) {
     startBroadcastBtn.disabled = false;
     const msg = mediaErr.name === 'NotAllowedError'
-      ? '❌ Permiso de cámara/micrófono denegado en el navegador.'
+      ? (broadcastCaptureType === 'system-audio'
+        ? '❌ Permiso de audio denegado. Selecciona la pestaña o ventana y acepta compartir el audio.'
+        : '❌ Permiso de cámara/micrófono denegado en el navegador.')
       : mediaErr.name === 'NotFoundError'
       ? '❌ Dispositivo no encontrado. Detecta los dispositivos primero.'
+      : mediaErr.name === 'NotSupportedError' || mediaErr.message?.includes('Not supported')
+      ? '❌ Tu navegador no admite esta captura de audio del sistema en este contexto. Prueba en Chrome/Edge actualizados y acepta compartir una pestaña o ventana.'
       : '❌ Error de captura: ' + mediaErr.message;
     mostrarMensaje(broadcastMessage, msg, 'error');
     return;
@@ -503,9 +653,63 @@ startBroadcastBtn.addEventListener('click', async () => {
   isBroadcasting = true;
   startBroadcastBtn.style.display = 'none';
   stopBroadcastBtn.style.display = '';
+  micToggleWrap.style.display = 'inline-flex';
   broadcastLiveInfo.style.display = 'flex';
   actualizarContadorViewers();
 });
+
+async function obtenerStreamAudioSistema() {
+  const candidates = [
+    { audio: true, video: false },
+    { audio: true, video: { cursor: 'always' } },
+    { audio: true, video: true }
+  ];
+
+  let lastError = null;
+  for (const constraints of candidates) {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length) {
+        stream.getVideoTracks().forEach(track => track.stop());
+        return stream;
+      }
+      stream.getTracks().forEach(track => track.stop());
+      lastError = new Error('No se obtuvo audio del sistema desde la fuente compartida.');
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('No se pudo capturar audio del sistema.');
+}
+
+function actualizarPreviewLocal(stream) {
+  if (!stream) {
+    localPreviewVideo.srcObject = null;
+    localPreviewVideo.style.display = 'none';
+    broadcastPreviewPlaceholder.style.display = 'none';
+    return;
+  }
+
+  const hasVideo = stream.getVideoTracks().length > 0;
+  if (hasVideo) {
+    localPreviewVideo.srcObject = stream;
+    localPreviewVideo.style.display = '';
+    broadcastPreviewPlaceholder.style.display = 'none';
+    localPreviewVideo.play().catch(() => {});
+  } else {
+    localPreviewVideo.srcObject = null;
+    localPreviewVideo.style.display = 'none';
+    broadcastPreviewPlaceholder.style.display = 'flex';
+    const title = broadcastCaptureType === 'system-audio'
+      ? 'Sonidos del sistema listos para transmitir'
+      : broadcastCaptureType === 'audio'
+        ? 'Audio listo para transmitir'
+        : 'Pantalla lista para transmitir';
+    broadcastPreviewPlaceholder.querySelector('h5').textContent = title;
+  }
+}
 
 async function crearConexionParaViewer(viewerId) {
   const pc = new RTCPeerConnection(BROADCAST_ICE);
@@ -514,6 +718,9 @@ async function crearConexionParaViewer(viewerId) {
   const viewerRef = doc(db, ...BCAST_PATH, 'viewers', viewerId);
 
   broadcastLocalStream.getTracks().forEach(track => pc.addTrack(track, broadcastLocalStream));
+  if (liveMicTrack) {
+    liveMicTrack.enabled = liveMicEnabled;
+  }
 
   pc.onicecandidate = async ({ candidate }) => {
     if (candidate) {
@@ -573,7 +780,7 @@ async function detenerEmisionBroadcast() {
   broadcastPeerConnections.clear();
   if (broadcastViewersUnsub) { broadcastViewersUnsub(); broadcastViewersUnsub = null; }
   if (broadcastLocalStream) { broadcastLocalStream.getTracks().forEach(t => t.stop()); broadcastLocalStream = null; }
-  localPreviewVideo.srcObject = null;
+  actualizarPreviewLocal(null);
   broadcastPreviewWrapper.style.display = 'none';
   try {
     const bcastRef = doc(db, ...BCAST_PATH);
@@ -589,6 +796,7 @@ async function detenerEmisionBroadcast() {
   startBroadcastBtn.style.display = '';
   startBroadcastBtn.disabled = false;
   stopBroadcastBtn.style.display = 'none';
+  micToggleWrap.style.display = 'none';
   broadcastLiveInfo.style.display = 'none';
   mostrarMensaje(broadcastMessage, '✅ Emisión detenida correctamente.', 'success');
 }

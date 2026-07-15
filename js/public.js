@@ -690,9 +690,12 @@ function mostrarVideoEnVivo(stream) {
   if (!video) return;
   video.srcObject = stream;
   video.muted = true;
-  video.style.display = 'block';
-  video.play().catch(() => {});
-  if (placeholder) placeholder.style.display = 'none';
+  const hasVideoTrack = stream.getVideoTracks().length > 0;
+  video.style.display = hasVideoTrack ? 'block' : 'none';
+  if (placeholder) placeholder.style.display = hasVideoTrack ? 'none' : '';
+  if (hasVideoTrack) {
+    video.play().catch(() => {});
+  }
 
   // Mostrar botón de activar sonido
   let btn = document.getElementById('liveUnmuteBtn');
